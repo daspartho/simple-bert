@@ -38,9 +38,27 @@ class Bert(nn.Module):
         x = self.encoder(x, mask)
         return x
 
+class BertLM(nn.Module):
+
+    def __init__(self, vocab_size=30000, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
+        super().__init__()
+        self.bert = Bert(vocab_size, max_len, n_segment, pad_idx, n_layer, d_model, n_head, dropout)
+        self.next_sentence = nn.Sequential(
+            nn.Linear(d_model, 2),
+            nn.LogSoftmax(dim=-1),
+        )
+        self.masked_lm = nn.Sequential(
+            nn.Linear(d_model, vocab_size),
+            nn.LogSoftmax(dim=-1),
+        )
+
+    def forward(self, token_ids, position_ids, segment_ids):
+        x = self.bert(token_ids, position_ids, segment_ids)
+        return self.next_sentence(x[:,0]), self.masked_lm(x)
+
 if __name__=="__main__":
 
-    bert = Bert()
+    bert_lm = BertLM()
 
     batch_size = 32
     seq_len = 64
@@ -49,5 +67,5 @@ if __name__=="__main__":
     position_ids = torch.arange(seq_len).unsqueeze(0).expand(batch_size, seq_len)
     segment_ids = torch.randint(2, size=(batch_size, seq_len))
 
-    out = bert(token_ids, position_ids, segment_ids)
-    print(out.shape)
+    next_sentence, masked_lm = bert_lm(token_ids, position_ids, segment_ids)
+    print(next_sentence.shape, masked_lm.shape)
