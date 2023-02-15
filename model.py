@@ -24,13 +24,15 @@ class BertEmbedding(nn.Module):
         x = self.token(token_ids) + self.position(position_ids) + self.segment(segment_ids)
         return self.dropout(x)
 
-class Bert(nn.Module):
+class BertModel(nn.Module):
 
     def __init__(self, vocab_size=30522, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
         super().__init__()
         self.embedding= BertEmbedding(vocab_size, max_len, n_segment, d_model, dropout, pad_idx)
         self.encoder = BertEncoder(n_layer, d_model, n_head, dropout)
         self.n_head = n_head
+        self.d_model = d_model
+        self.vocab_size = vocab_size
 
     def forward(self, token_ids, position_ids, segment_ids):
         mask = (token_ids > 0).unsqueeze(1).repeat(self.n_head, token_ids.size(1), 1)
@@ -40,25 +42,26 @@ class Bert(nn.Module):
 
 class BertLM(nn.Module):
 
-    def __init__(self, vocab_size=30522, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
+    def __init__(self, bert_model):
         super().__init__()
-        self.bert = Bert(vocab_size, max_len, n_segment, pad_idx, n_layer, d_model, n_head, dropout)
-        self.next_sentence = nn.Sequential(
-            nn.Linear(d_model, 2),
+        self.bert_model = bert_model
+        self.next_sentence_prediction = nn.Sequential(
+            nn.Linear(bert_model.d_model, 2),
             nn.LogSoftmax(dim=-1),
         )
         self.masked_lm = nn.Sequential(
-            nn.Linear(d_model, vocab_size),
+            nn.Linear(bert_model.d_model, bert_model.vocab_size),
             nn.LogSoftmax(dim=-1),
         )
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.bert(token_ids, position_ids, segment_ids)
-        return self.next_sentence(x[:,0]), self.masked_lm(x)
+        x = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.next_sentence_prediction(x[:,0]), self.masked_lm(x)
 
 if __name__=="__main__":
 
-    bert_lm = BertLM()
+    bert_model = BertModel()
+    bert_lm = BertLM(bert_model)
 
     batch_size = 32
     seq_len = 64
@@ -67,5 +70,5 @@ if __name__=="__main__":
     position_ids = torch.arange(seq_len).unsqueeze(0).expand(batch_size, seq_len)
     segment_ids = torch.randint(2, size=(batch_size, seq_len))
 
-    next_sentence, masked_lm = bert_lm(token_ids, position_ids, segment_ids)
-    print(next_sentence.shape, masked_lm.shape)
+    next_sentence_prediction, masked_lm = bert_lm(token_ids, position_ids, segment_ids)
+    print(next_sentence_prediction.shape, masked_lm.shape)
