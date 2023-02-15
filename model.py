@@ -13,7 +13,7 @@ class BertEncoder(nn.Module):
 
 class BertEmbedding(nn.Module):
 
-    def __init__(self, vocab_size=30000, max_len=512, n_segment=2, d_model=768, dropout=0.1, pad_idx=0):
+    def __init__(self, vocab_size=30522, max_len=512, n_segment=2, d_model=768, dropout=0.1, pad_idx=0):
         super().__init__()
         self.token = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model, padding_idx=pad_idx)
         self.position = nn.Embedding(num_embeddings=max_len, embedding_dim=d_model, padding_idx=pad_idx)
@@ -26,7 +26,7 @@ class BertEmbedding(nn.Module):
 
 class Bert(nn.Module):
 
-    def __init__(self, vocab_size=30000, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
+    def __init__(self, vocab_size=30522, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
         super().__init__()
         self.embedding= BertEmbedding(vocab_size, max_len, n_segment, d_model, dropout, pad_idx)
         self.encoder = BertEncoder(n_layer, d_model, n_head, dropout)
@@ -40,7 +40,7 @@ class Bert(nn.Module):
 
 class BertLM(nn.Module):
 
-    def __init__(self, vocab_size=30000, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
+    def __init__(self, vocab_size=30522, max_len=512, n_segment=2, pad_idx=0, n_layer=12, d_model=768, n_head=12, dropout=0.1):
         super().__init__()
         self.bert = Bert(vocab_size, max_len, n_segment, pad_idx, n_layer, d_model, n_head, dropout)
         self.next_sentence = nn.Sequential(
@@ -63,7 +63,7 @@ if __name__=="__main__":
     batch_size = 32
     seq_len = 64
 
-    token_ids = torch.randint(30000, size=(batch_size, seq_len))
+    token_ids = torch.randint(30522, size=(batch_size, seq_len))
     position_ids = torch.arange(seq_len).unsqueeze(0).expand(batch_size, seq_len)
     segment_ids = torch.randint(2, size=(batch_size, seq_len))
 
