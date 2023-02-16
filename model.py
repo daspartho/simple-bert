@@ -40,7 +40,7 @@ class BertModel(nn.Module):
         x = self.encoder(x, mask)
         return x
 
-class BertLM(nn.Module):
+class BertPreTrain(nn.Module):
 
     def __init__(self, bert_model):
         super().__init__()
@@ -97,14 +97,14 @@ class BertSequenceClassification(nn.Module):
 if __name__=="__main__":
 
     bert_model = BertModel()
-    bert_lm = BertLM(bert_model)
+    bert_pre_train = BertPreTrain(bert_model)
 
     batch_size = 32
     seq_len = 64
 
-    token_ids = torch.randint(30522, size=(batch_size, seq_len))
+    token_ids = torch.randint(bert_model.vocab_size, size=(batch_size, seq_len))
     position_ids = torch.arange(seq_len).unsqueeze(0).expand(batch_size, seq_len)
     segment_ids = torch.randint(2, size=(batch_size, seq_len))
 
-    next_sentence_prediction, masked_lm = bert_lm(token_ids, position_ids, segment_ids)
+    next_sentence_prediction, masked_lm = bert_pre_train(token_ids, position_ids, segment_ids)
     print(next_sentence_prediction.shape, masked_lm.shape)
