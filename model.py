@@ -96,6 +96,18 @@ class BertSequenceClassification(nn.Module):
         hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
         return self.softmax(self.linear(hidden_states[:,0]))
 
+class BertTokenClassification(nn.Module):
+
+    def __init__(self, bert_model, n_labels):
+        super().__init__()
+        self.bert_model = bert_model
+        self.linear = nn.Linear(bert_model.d_model, n_labels)
+        self.softmax = nn.LogSoftmax(dim=-1)
+
+    def forward(self, token_ids, position_ids, segment_ids):
+        hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(hidden_states))
+
 if __name__=="__main__":
 
     bert_model = BertModel()
