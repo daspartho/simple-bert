@@ -45,18 +45,20 @@ class BertPreTrain(nn.Module):
     def __init__(self, bert_model):
         super().__init__()
         self.bert_model = bert_model
-        self.next_sentence_prediction = nn.Sequential(
-            nn.Linear(bert_model.d_model, 2),
-            nn.LogSoftmax(dim=-1),
-        )
-        self.masked_lm = nn.Sequential(
-            nn.Linear(bert_model.d_model, bert_model.vocab_size),
-            nn.LogSoftmax(dim=-1),
-        )
+        self.next_sentence_prediction = nn.Linear(bert_model.d_model, 2)
+        self.masked_lm = nn.Linear(bert_model.d_model, bert_model.vocab_size)
+        self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.bert_model(token_ids, position_ids, segment_ids)
-        return self.next_sentence_prediction(x[:,0]), self.masked_lm(x)
+        hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
+
+        next_sentence_prediction_logits = self.next_sentence_prediction(hidden_states[:,0])
+        next_sentence_prediction_probs = self.softmax(next_sentence_prediction_logits)
+        
+        masked_lm_logits = self.masked_lm(hidden_states)
+        masked_lm_probs = self.softmax(masked_lm_logits)
+        
+        return next_sentence_prediction_probs, masked_lm_probs
 
 class BertNextSentencePrediction(nn.Module):
 
