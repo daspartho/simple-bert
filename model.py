@@ -8,8 +8,8 @@ class BertEncoder(nn.Module):
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=n_head, dim_feedforward=4*d_model, activation="gelu", dropout=dropout, batch_first=True)
         self.encoder = nn.TransformerEncoder(encoder_layer=encoder_layer, num_layers=n_layer)
 
-    def forward(self, x, mask):
-        return self.encoder(x, mask=mask)
+    def forward(self, embedding, mask):
+        return self.encoder(embedding, mask=mask)
 
 class BertEmbedding(nn.Module):
 
@@ -21,8 +21,8 @@ class BertEmbedding(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.token(token_ids) + self.position(position_ids) + self.segment(segment_ids)
-        return self.dropout(x)
+        embedding = self.token(token_ids) + self.position(position_ids) + self.segment(segment_ids)
+        return self.dropout(embedding)
 
 class BertModel(nn.Module):
 
@@ -36,9 +36,9 @@ class BertModel(nn.Module):
 
     def forward(self, token_ids, position_ids, segment_ids):
         mask = (token_ids > 0).unsqueeze(1).repeat(self.n_head, token_ids.size(1), 1)
-        x = self.embedding(token_ids, position_ids, segment_ids)
-        x = self.encoder(x, mask)
-        return x
+        embedding = self.embedding(token_ids, position_ids, segment_ids)
+        hidden_states = self.encoder(embedding, mask)
+        return hidden_states
 
 class BertPreTrain(nn.Module):
 
@@ -69,8 +69,8 @@ class BertNextSentencePrediction(nn.Module):
         self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.bert_model(token_ids, position_ids, segment_ids)
-        return self.softmax(self.linear(x[:,0]))
+        hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(hidden_states[:,0]))
 
 class BertMaskedLM(nn.Module):
 
@@ -81,8 +81,8 @@ class BertMaskedLM(nn.Module):
         self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.bert_model(token_ids, position_ids, segment_ids)
-        return self.softmax(self.linear(x))
+        hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(hidden_states))
 
 class BertSequenceClassification(nn.Module):
 
@@ -93,8 +93,8 @@ class BertSequenceClassification(nn.Module):
         self.softmax = nn.LogSoftmax(dim=-1)
 
     def forward(self, token_ids, position_ids, segment_ids):
-        x = self.bert_model(token_ids, position_ids, segment_ids)
-        return self.softmax(self.linear(x[:,0]))
+        hidden_states = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(hidden_states[:,0]))
 
 if __name__=="__main__":
 
