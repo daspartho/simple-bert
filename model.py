@@ -111,7 +111,6 @@ class BertTokenClassification(nn.Module):
 if __name__=="__main__":
 
     bert_model = BertModel()
-    bert_pre_train = BertPreTrain(bert_model)
 
     batch_size = 32
     seq_len = 64
@@ -120,5 +119,22 @@ if __name__=="__main__":
     position_ids = torch.arange(seq_len).unsqueeze(0).expand(batch_size, seq_len)
     segment_ids = torch.randint(2, size=(batch_size, seq_len))
 
+    bert_pre_train = BertPreTrain(bert_model)
     next_sentence_prediction, masked_lm = bert_pre_train(token_ids, position_ids, segment_ids)
-    print(next_sentence_prediction.shape, masked_lm.shape)
+    print("BertPreTrain Output Shape", next_sentence_prediction.shape, masked_lm.shape)
+
+    bert_next_sentence_prediction = BertNextSentencePrediction(bert_model)
+    next_sentence_prediction = bert_next_sentence_prediction(token_ids, position_ids, segment_ids)
+    print("BertNextSentencePrediction Output Shape", next_sentence_prediction.shape)
+
+    bert_masked_lm = BertMaskedLM(bert_model)
+    masked_lm = bert_masked_lm(token_ids, position_ids, segment_ids)
+    print("BertMaskedLM Output Shape", masked_lm.shape)
+
+    bert_sequence_classification = BertSequenceClassification(bert_model, 4)
+    sequence_classification = bert_sequence_classification(token_ids, position_ids, segment_ids)
+    print("BertSequenceClassification Output Shape", sequence_classification.shape)
+
+    bert_token_classification = BertTokenClassification(bert_model, 4)
+    token_classification = bert_token_classification(token_ids, position_ids, segment_ids)
+    print("BertTokenClassification Output Shape", token_classification.shape)
