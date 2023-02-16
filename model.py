@@ -82,6 +82,18 @@ class BertMaskedLM(nn.Module):
         x = self.bert_model(token_ids, position_ids, segment_ids)
         return self.softmax(self.linear(x))
 
+class BertSequenceClassification(nn.Module):
+
+    def __init__(self, bert_model, n_labels):
+        super().__init__()
+        self.bert_model = bert_model
+        self.linear = nn.Linear(bert_model.d_model, n_labels)
+        self.softmax = nn.LogSoftmax(dim=-1)
+
+    def forward(self, token_ids, position_ids, segment_ids):
+        x = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(x[:,0]))
+
 if __name__=="__main__":
 
     bert_model = BertModel()
