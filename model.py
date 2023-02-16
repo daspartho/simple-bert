@@ -58,6 +58,18 @@ class BertLM(nn.Module):
         x = self.bert_model(token_ids, position_ids, segment_ids)
         return self.next_sentence_prediction(x[:,0]), self.masked_lm(x)
 
+class BertNextSentencePrediction(nn.Module):
+
+    def __init__(self, bert_model):
+        super().__init__()
+        self.bert_model = bert_model
+        self.linear = nn.Linear(bert_model.d_model, 2)
+        self.softmax = nn.LogSoftmax(dim=-1)
+
+    def forward(self, token_ids, position_ids, segment_ids):
+        x = self.bert_model(token_ids, position_ids, segment_ids)
+        return self.softmax(self.linear(x[:,0]))
+
 if __name__=="__main__":
 
     bert_model = BertModel()
